@@ -16,6 +16,8 @@ const trackerSchema = z.object({
   terminalStates: z
     .array(z.string())
     .default(['Closed', 'Cancelled', 'Canceled', 'Duplicate', 'Done']),
+  dispatchState: z.string().nullable().default(null),
+  completionState: z.string().nullable().default(null),
   assignee: z.string().nullable().default(null),
 });
 

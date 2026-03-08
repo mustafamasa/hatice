@@ -20,6 +20,8 @@ function makeConfig(overrides: Partial<TrackerConfig> = {}): TrackerConfig {
     projectSlug: 'group/project',
     activeStates: ['Open'],
     terminalStates: ['Closed'],
+    dispatchState: null,
+    completionState: null,
     assignee: 'dev1',
     ...overrides,
   };
@@ -35,7 +37,7 @@ describe('GitLabAdapter', () => {
       new GitLabAdapter(makeConfig());
 
       expect(GitLabClient).toHaveBeenCalledWith(
-        'https://gitlab.local', 'test-token', 'group/project', 'dev1',
+        'https://gitlab.local', 'test-token', 'group/project', 'dev1', ['Open', 'Closed'],
       );
     });
   });

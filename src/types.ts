@@ -66,7 +66,7 @@ export interface AggregateTotals {
 }
 
 export type WorkerResult =
-  | { kind: 'normal'; issueId: string; turnsCompleted: number; usage: TokenUsage; durationMs: number }
+  | { kind: 'normal'; issueId: string; turnsCompleted: number; usage: TokenUsage; durationMs: number; summary?: string }
   | { kind: 'error'; issueId: string; error: Error; attempt: number; durationMs: number }
   | { kind: 'cancelled'; issueId: string; reason: string };
 
@@ -88,6 +88,8 @@ export interface TrackerConfig {
   projectSlug: string;
   activeStates: string[];
   terminalStates: string[];
+  dispatchState: string | null;
+  completionState: string | null;
   assignee: string | null;
 }
 

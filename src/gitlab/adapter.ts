@@ -6,7 +6,14 @@ export class GitLabAdapter implements Tracker {
   private activeStates: string[];
 
   constructor(config: TrackerConfig) {
-    this.client = new GitLabClient(config.endpoint, config.apiKey, config.projectSlug, config.assignee);
+    // Collect all known board labels so the client can resolve issue state from labels
+    const boardLabels = [
+      ...config.activeStates,
+      ...config.terminalStates,
+      ...(config.dispatchState ? [config.dispatchState] : []),
+      ...(config.completionState ? [config.completionState] : []),
+    ];
+    this.client = new GitLabClient(config.endpoint, config.apiKey, config.projectSlug, config.assignee, boardLabels);
     this.activeStates = config.activeStates;
   }
 

@@ -29,12 +29,17 @@ export class GitLabClient {
   private baseUrl: string;
   private projectPath: string;
   private assignee: string | null;
+  private boardLabels: Set<string>;
+  private boardLabelsLower: Map<string, string>;
 
-  constructor(endpoint: string, apiToken: string, projectPath: string, assignee: string | null) {
+  constructor(endpoint: string, apiToken: string, projectPath: string, assignee: string | null, boardLabels: string[] = []) {
     this.baseUrl = endpoint.replace(/\/+$/, '');
     this.apiToken = apiToken;
     this.projectPath = projectPath;
     this.assignee = assignee;
+    this.boardLabels = new Set(boardLabels);
+    // Map lowercase → original case for matching
+    this.boardLabelsLower = new Map(boardLabels.map(l => [l.toLowerCase(), l]));
   }
 
   private encodedProject(): string {
@@ -66,7 +71,15 @@ export class GitLabClient {
   private normalizeIssue(issue: GitLabIssue): Issue {
     const identifier = `${this.projectPath}#${issue.iid}`;
 
-    const state = issue.state === 'opened' ? 'Open' : 'Closed';
+    // Determine state: check labels for board column match first, then fall back to native state
+    let state = issue.state === 'opened' ? 'Open' : 'Closed';
+    for (const label of issue.labels) {
+      const match = this.boardLabelsLower.get(label.toLowerCase());
+      if (match) {
+        state = match;
+        break;
+      }
+    }
 
     const labels = issue.labels.map((l) => l.toLowerCase());
 
@@ -165,10 +178,38 @@ export class GitLabClient {
   async updateIssueState(issueId: string, stateName: string): Promise<void> {
     const iid = this.extractIssueIid(issueId);
     const lower = stateName.toLowerCase();
-    const stateEvent = (lower === 'closed' || lower === 'done') ? 'close' : 'reopen';
-    await this.request('PUT', `/projects/${this.encodedProject()}/issues/${iid}`, {
-      state_event: stateEvent,
-    });
+
+    if (lower === 'closed' || lower === 'done') {
+      // Native GitLab close
+      await this.request('PUT', `/projects/${this.encodedProject()}/issues/${iid}`, {
+        state_event: 'close',
+      });
+    } else if (this.boardLabels.has(stateName) || this.boardLabelsLower.has(lower)) {
+      // Board label transition: add target label, remove other board labels
+      const targetLabel = this.boardLabelsLower.get(lower) ?? stateName;
+
+      // Fetch current issue to get existing labels
+      const issue = await this.request<GitLabIssue>(
+        'GET',
+        `/projects/${this.encodedProject()}/issues/${iid}`,
+      );
+
+      // Keep non-board labels, replace board labels with the target
+      const newLabels = issue.labels.filter(l => !this.boardLabelsLower.has(l.toLowerCase()));
+      newLabels.push(targetLabel);
+
+      // Ensure issue is opened (not closed) when moving to a board column
+      await this.request('PUT', `/projects/${this.encodedProject()}/issues/${iid}`, {
+        labels: newLabels.join(','),
+        state_event: issue.state === 'closed' ? 'reopen' : undefined,
+      });
+    } else {
+      // Unknown state — try native reopen
+      const stateEvent = 'reopen';
+      await this.request('PUT', `/projects/${this.encodedProject()}/issues/${iid}`, {
+        state_event: stateEvent,
+      });
+    }
   }
 
   private extractIssueIid(issueId: string): string {

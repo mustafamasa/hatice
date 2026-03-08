@@ -95,6 +95,7 @@ export class AgentRunner {
         turnsCompleted,
         usage: totalUsage,
         durationMs: Date.now() - startTime,
+        summary: turnResult.summary ?? undefined,
       };
     } catch (error: any) {
       this.sessionLog?.error({ error: error?.message }, 'Agent run failed');
@@ -148,6 +149,7 @@ export class AgentRunner {
       isComplete: false,
       usage: null,
       sessionId: null,
+      summary: null,
     };
 
     let opencode: any;
@@ -228,6 +230,15 @@ export class AgentRunner {
         };
       }
 
+      // Extract summary from response parts
+      const parts = promptData?.parts ?? [];
+      const textParts = parts.filter((p: any) => p.type === 'text' && p.text);
+      if (textParts.length > 0) {
+        const lastText = textParts[textParts.length - 1].text as string;
+        // Take last 500 chars as summary
+        result.summary = lastText.length > 500 ? lastText.slice(-500) : lastText;
+      }
+
       if (info?.error) {
         this.sessionLog?.error({ error: info.error }, 'OpenCode agent error in response');
       }
@@ -254,6 +265,7 @@ export class AgentRunner {
     const simulatedTokens = Math.floor(500 + Math.random() * 2000);
     return {
       isComplete: turn >= this.options.maxTurns || Math.random() > 0.5,
+      summary: 'Simulated agent completion (dry-run)',
       usage: {
         inputTokens: simulatedTokens,
         outputTokens: Math.floor(simulatedTokens * 0.3),
@@ -271,6 +283,7 @@ interface TurnResult {
   isComplete: boolean;
   usage: TokenUsage | null;
   sessionId: string | null;
+  summary: string | null;
 }
 
 function mergeUsage(a: TokenUsage, b: TokenUsage): TokenUsage {

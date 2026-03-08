@@ -3,14 +3,16 @@ tracker:
   kind: gitlab
   endpoint: "https://gitlab.example.com/"
   apiKey: $GITLAB_TOKEN
-  projectSlug: "your-group/your-project"
-  activeStates: ["Open"]
+  projectSlug: "my-org/my-project"
+  activeStates: ["To Do"]
   terminalStates: ["Closed"]
-  assignee: "me"
+  dispatchState: "AI Working"
+  completionState: "Human Review"
+  assignee: "admin"
 workspace:
   rootDir: /tmp/hatice-workspaces
 hooks:
-  afterCreate: "git clone https://gitlab-ci-token:$GITLAB_TOKEN@gitlab.example.com/your-group/your-project.git . && npm install"
+  afterCreate: "git clone https://admin:$GITLAB_TOKEN@gitlab.example.com/my-org/my-project.git . && npm install"
   afterRun: "git add -A && git diff --cached --quiet || git commit -m 'fix: automated agent changes' && git push origin HEAD"
 polling:
   intervalMs: 30000
@@ -22,7 +24,7 @@ opencode:
 server:
   port: 4000
 ---
-You are an expert software engineer working on the project.
+You are an expert software engineer working on this project.
 
 Solve the following GitLab issue:
 
@@ -37,7 +39,8 @@ Solve the following GitLab issue:
   ```
   git checkout -b fix/{{ issue.identifier | replace: "#", "-" | replace: "/", "-" }}
   ```
-* When done, commit all changes with a descriptive message and push the branch:
+* When done, commit all changes and push the branch. Always include the issue number (#{{ issue.identifier | split: "#" | last }}) in the commit message:
   ```
-  git add -A && git commit -m "fix: descriptive message" && git push origin HEAD
+  git add -A && git commit -m "fix(#{{ issue.identifier | split: "#" | last }}): descriptive message" && git push origin HEAD
   ```
+* You MUST write all your responses, summaries, and explanations in Turkish

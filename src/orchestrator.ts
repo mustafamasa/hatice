@@ -277,6 +277,16 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
       this.eventBus.emit('issue:dispatched', issue.id, issue.identifier);
       this.emitStateUpdated();
       this.log.info({ issueId: issue.id, identifier: issue.identifier, attempt }, 'Issue dispatched');
+
+      // Move issue to dispatch state if configured
+      if (this.config.tracker.dispatchState) {
+        try {
+          await this.tracker.updateIssueState(issue.identifier, this.config.tracker.dispatchState);
+          this.log.info({ issueId: issue.id, state: this.config.tracker.dispatchState }, 'Moved issue to dispatch state');
+        } catch (e) {
+          this.log.warn({ err: e, issueId: issue.id }, 'Failed to move issue to dispatch state');
+        }
+      }
     } catch (e) {
       this.state.unclaim(issue.id);
       throw e;
@@ -327,15 +337,18 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
 
           // Update tracker: post comment + move to Done
           try {
-            const usage = result.usage;
+            const branchName = `fix/${entry.identifier.replace(/#/g, '-').replace(/\//g, '-')}`;
+            const summaryText = result.summary
+              ? result.summary.split('\n').slice(0, 5).join('\n')
+              : null;
             const comment = [
-              `**Hitit AI** completed this issue.`,
-              `- Turns: ${result.turnsCompleted}`,
-              `- Duration: ${((result.durationMs ?? 0) / 1000).toFixed(1)}s`,
-              ...(usage ? [
-                `- Tokens: ${usage.totalTokens} (in: ${usage.inputTokens}, out: ${usage.outputTokens})`,
-                `- Cost: $${usage.costUsd.toFixed(4)}`,
-              ] : []),
+              `✅ **Bu issue tamamlandı.**`,
+              '',
+              ...(summaryText ? [`**Yapılan işlem:** ${summaryText}`, ''] : []),
+              `**Branch:** \`${branchName}\``,
+              '',
+              `- **Süre:** ${((result.durationMs ?? 0) / 1000).toFixed(1)}s`,
+              `- **Turn:** ${result.turnsCompleted}`,
             ].join('\n');
             await this.tracker.createComment(entry.identifier, comment);
             this.log.info({ issueId }, 'Posted completion comment to tracker');
@@ -344,10 +357,11 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
           }
 
           try {
-            await this.tracker.updateIssueState(entry.identifier, 'Done');
-            this.log.info({ issueId }, 'Updated issue state to Done');
+            const completionState = this.config.tracker.completionState ?? 'Done';
+            await this.tracker.updateIssueState(entry.identifier, completionState);
+            this.log.info({ issueId, state: completionState }, 'Updated issue state');
           } catch (e) {
-            this.log.warn({ err: e, issueId }, 'Failed to update issue state to Done');
+            this.log.warn({ err: e, issueId }, 'Failed to update issue state');
           }
 
           // Keep workspace after completion so code changes are preserved
@@ -465,6 +479,10 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
       const activeStates = new Set(
         this.config.tracker.activeStates.map(s => s.trim().toLowerCase())
       );
+      // dispatchState is a valid "working" state for running agents
+      if (this.config.tracker.dispatchState) {
+        activeStates.add(this.config.tracker.dispatchState.trim().toLowerCase());
+      }
 
       for (const [issueId, entry] of this.state.running) {
         const fresh = freshMap.get(issueId);
