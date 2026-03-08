@@ -43,16 +43,16 @@ const agentSchema = z.object({
   retryOnNormalExit: z.boolean().default(false),
 });
 
-const claudeSchema = z.object({
-  model: z.string().nullable().default(null),
-  permissionMode: z.string().default('bypassPermissions'),
+const opencodeSchema = z.object({
+  hostname: z.string().default('127.0.0.1'),
+  port: z.number().default(4096),
+  model: z.object({
+    providerID: z.string(),
+    modelID: z.string(),
+  }).nullable().default(null),
+  permission: z.union([z.string(), z.record(z.string(), z.string())]).nullable().default(null),
   turnTimeoutMs: z.number().default(3_600_000),
   stallTimeoutMs: z.number().default(300_000),
-  allowedTools: z.array(z.string()).nullable().default(null),
-  disallowedTools: z.array(z.string()).nullable().default(null),
-  systemPrompt: z.string().nullable().default(null),
-  canUseTool: z.record(z.string(), z.boolean()).nullable().default(null),
-  claudeCodePath: z.string().nullable().default(null),
   autoRespondToInput: z.boolean().default(true),
   dryRun: z.boolean().default(false),
 });
@@ -80,16 +80,13 @@ const haticeConfigSchema = z.object({
     maxConcurrentAgentsByState: {},
     retryOnNormalExit: false,
   }),
-  claude: claudeSchema.default({
+  opencode: opencodeSchema.default({
+    hostname: '127.0.0.1',
+    port: 4096,
     model: null,
-    permissionMode: 'bypassPermissions',
+    permission: null,
     turnTimeoutMs: 3_600_000,
     stallTimeoutMs: 300_000,
-    allowedTools: null,
-    disallowedTools: null,
-    systemPrompt: null,
-    canUseTool: null,
-    claudeCodePath: null,
     autoRespondToInput: true,
     dryRun: false,
   }),

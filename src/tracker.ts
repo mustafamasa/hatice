@@ -31,7 +31,7 @@ export class MemoryTracker implements Tracker {
 
   async fetchIssueStatesByIds(ids: string[]): Promise<Issue[]> {
     const idSet = new Set(ids);
-    return [...this.issues.values()].filter((i) => idSet.has(i.id));
+    return [...this.issues.values()].filter((i) => idSet.has(i.id) || idSet.has(i.identifier));
   }
 
   async createComment(issueId: string, body: string): Promise<void> {
@@ -39,7 +39,8 @@ export class MemoryTracker implements Tracker {
   }
 
   async updateIssueState(issueId: string, stateName: string): Promise<void> {
-    const issue = this.issues.get(issueId);
+    const issue = this.issues.get(issueId)
+      ?? [...this.issues.values()].find(i => i.identifier === issueId);
     if (issue) {
       issue.state = stateName;
     }

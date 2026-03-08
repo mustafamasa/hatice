@@ -15,9 +15,8 @@ polling:
 agent:
   maxConcurrentAgents: 3
   maxTurns: 0
-claude:
-  permissionMode: bypassPermissions
-  model: claude-sonnet-4-20250514
+opencode:
+  permission: "allow"
 server:
   port: 4000
 ---

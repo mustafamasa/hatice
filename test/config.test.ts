@@ -114,14 +114,12 @@ describe('validateConfig', () => {
     expect(cfg.agent.maxRetryBackoffMs).toBe(300_000);
     expect(cfg.agent.maxConcurrentAgentsByState).toEqual({});
 
-    // claude defaults
-    expect(cfg.claude.permissionMode).toBe('bypassPermissions');
-    expect(cfg.claude.model).toBeNull();
-    expect(cfg.claude.turnTimeoutMs).toBe(3_600_000);
-    expect(cfg.claude.stallTimeoutMs).toBe(300_000);
-    expect(cfg.claude.allowedTools).toBeNull();
-    expect(cfg.claude.disallowedTools).toBeNull();
-    expect(cfg.claude.systemPrompt).toBeNull();
+    // opencode defaults
+    expect(cfg.opencode.turnTimeoutMs).toBe(3_600_000);
+    expect(cfg.opencode.stallTimeoutMs).toBe(300_000);
+    expect(cfg.opencode.model).toBeNull();
+    expect(cfg.opencode.hostname).toBe('127.0.0.1');
+    expect(cfg.opencode.port).toBe(4096);
 
     // server defaults
     expect(cfg.server.host).toBe('127.0.0.1');

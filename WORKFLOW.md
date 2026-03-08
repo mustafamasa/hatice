@@ -15,15 +15,14 @@ polling:
 agent:
   maxConcurrentAgents: 5
   maxTurns: 0
-claude:
-  permissionMode: bypassPermissions
-  model: claude-sonnet-4-20250514
+opencode:
+  permission: "allow"
 server:
   port: 4000
 ---
 You are an expert frontend developer building a presentation website for **hatice** — an autonomous issue orchestration system.
 
-The project is a single `index.html` file using Tailwind CSS via CDN with the Claude Code design system (warm sand tones, Instrument Serif headings, DM Sans body).
+The project is a single `index.html` file using Tailwind CSS via CDN with a warm design system (warm sand tones, Instrument Serif headings, DM Sans body).
 
 Solve the following task:
 
@@ -33,7 +32,7 @@ Solve the following task:
 
 ## Rules
 - ONLY modify `index.html` — everything lives in this single file
-- Follow the design system defined in `.claude/CLAUDE.md`
+- Follow the design system defined in the project configuration
 - Preserve all existing sections, add new content below the last section
 - Use Tailwind utility classes — no external CSS files
 - Do NOT commit — changes are live-linked to the dev server

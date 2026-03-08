@@ -2,13 +2,13 @@
 
 **Autonomous issue orchestration for the agent-first era.**
 
-Hatice polls your issue tracker, spins up isolated workspaces, and dispatches Claude Code agents to solve each issue end-to-end. Full lifecycle management: dispatch, multi-turn execution, retry with exponential backoff, reconciliation, and real-time observability.
+Hatice polls your issue tracker, spins up isolated workspaces, and dispatches OpenCode agents to solve each issue end-to-end. Full lifecycle management: dispatch, multi-turn execution, retry with exponential backoff, reconciliation, and real-time observability.
 
 > *"Humans steer. Agents execute."*
 >
 > This project embraces the [Harness Engineering](https://openai.com/index/harness-engineering/) manifesto — the idea that the engineer's role is no longer to write code, but to **design environments, specify intent, and build feedback loops** that allow coding agents to do reliable work.
 >
-> OpenAI demonstrated this with Codex. Hatice is the working, open-source implementation of the same philosophy — powered by **Claude Code Agent SDK**.
+> OpenAI demonstrated this with Codex. Hatice is the working, open-source implementation of the same philosophy — powered by **OpenCode SDK**.
 
 https://github.com/user-attachments/assets/3232c476-c573-4311-b6d4-3941578b0ce3
 
@@ -18,10 +18,10 @@ https://github.com/user-attachments/assets/3232c476-c573-4311-b6d4-3941578b0ce3
 
 In February 2026, OpenAI published "Harness Engineering" — a radical rethinking of software development where **every line of code is written by agents**, and engineers focus on scaffolding, specification, and leverage.
 
-We share this vision. Hatice was built to prove it works with Claude Code:
+We share this vision. Hatice was built to prove it works with OpenCode:
 
 - **Specification-driven development** — A single `WORKFLOW.md` file defines tracker config, workspace hooks, agent behavior, and the task prompt. The agent reads it; the human writes it.
-- **Repository knowledge as system of record** — `.claude/CLAUDE.md` encodes TDD methodology, architectural constraints, and coding standards. Agents follow them automatically.
+- **Repository knowledge as system of record** — Project rules and coding standards are encoded in configuration. Agents follow them automatically.
 - **Feedback loops over manual fixes** — When an agent fails, Hatice retries with exponential backoff, re-checks tracker state, and reconciles. The system self-corrects.
 - **Parallel agent orchestration** — Multiple agents work concurrently on different issues, each in isolated workspaces with independent sessions.
 - **Observability-first** — Real-time SSE dashboard, terminal ANSI display, per-session logs, rate limit tracking, and token accounting. You see everything the agents do.
@@ -32,14 +32,14 @@ This is not a wrapper or a toy. This is a production-grade orchestration system 
 
 ## Symphony vs Hatice
 
-Hatice was inspired by the architectural patterns demonstrated in [Symphony](https://github.com/openai/symphony), OpenAI's Elixir/OTP orchestration system for Codex agents. We reimagined every component from scratch in TypeScript, replacing Codex with Claude Code Agent SDK and adding capabilities that go beyond the original.
+Hatice was inspired by the architectural patterns demonstrated in [Symphony](https://github.com/openai/symphony), OpenAI's Elixir/OTP orchestration system for Codex agents. We reimagined every component from scratch in TypeScript, replacing Codex with OpenCode SDK and adding capabilities that go beyond the original.
 
 **No code was copied. No license was violated.** We adopted the manifesto, studied the architecture, and built something new.
 
-| Capability | Symphony (Elixir/Codex) | Hatice (TypeScript/Claude) |
+| Capability | Symphony (Elixir/Codex) | Hatice (TypeScript/OpenCode) |
 |---|---|---|
 | **Runtime** | Elixir/OTP (BEAM VM) | Node.js 20+ / Bun |
-| **Agent SDK** | Codex JSON-RPC over stdio | Claude Code Agent SDK `query()` |
+| **Agent SDK** | Codex JSON-RPC over stdio | OpenCode SDK `session.prompt()` |
 | **Web Framework** | Phoenix + LiveView (WebSocket) | Hono + SSE (EventSource) |
 | **Config Validation** | NimbleOptions | Zod v4 |
 | **Template Engine** | EEx | LiquidJS |
@@ -50,10 +50,10 @@ Hatice was inspired by the architectural patterns demonstrated in [Symphony](htt
 | **Real-time Dashboard** | Phoenix LiveView | SSE + vanilla JS |
 | **Issue Tracker** | Linear only | Linear + GitHub Issues |
 | **Test Framework** | ExUnit (~17 files) | Vitest (30 files, 328 tests) |
-| **Model Selection** | Fixed (Codex) | Configurable (`claude.model`) |
+| **Model Selection** | Fixed (Codex) | Configurable (`opencode.model`) |
 | **Cost Tracking** | Not available | Per-session USD tracking |
 | **Cache Token Metrics** | Not available | `cacheRead/CreationInputTokens` |
-| **Tool Control** | Approval policy | `allowedTools` / `disallowedTools` + `canUseTool` |
+| **Tool Control** | Approval policy | Permission-based control |
 | **MCP Tools** | Not available | `linear_graphql` + `github_graphql` |
 | **Workspace Artifacts** | `.elixir_ls` cleanup | 8-pattern temp dir cleanup |
 | **Home Dir Expansion** | Not available | `~/` in config paths |
@@ -63,18 +63,18 @@ Hatice was inspired by the architectural patterns demonstrated in [Symphony](htt
 | **Turn Timeout** | Not available | Per-turn AbortController deadline |
 | **Snapshot Timeout** | GenServer timeout | Promise.race wrapper |
 | **Startup Cleanup** | Terminal state cleanup | Stale workspace cleanup (age-based) |
-| **TDD Methodology** | Not embedded | Built-in via `.claude/CLAUDE.md` |
+| **TDD Methodology** | Not embedded | Built-in via project configuration |
 
 ### What Hatice adds beyond Symphony
 
 - **GitHub Issues support** — Not just Linear. Full REST + GraphQL adapter with `owner/repo` format.
-- **Claude Code Agent SDK** — High-level `query()` API instead of raw JSON-RPC protocol management.
+- **OpenCode SDK** — High-level `session.prompt()` API instead of raw JSON-RPC protocol management.
 - **SSE real-time dashboard** — No WebSocket framework dependency. Pure EventSource + vanilla JS.
 - **Typed EventBus** — Full type safety with wildcard `onAny()` support, not just string-based PubSub.
 - **Per-session cost tracking** — Know exactly how much each agent session costs in USD.
-- **Fine-grained tool control** — Allow/disallow specific tools, custom `canUseTool` callbacks.
+- **Fine-grained tool control** — Permission-based tool access control.
 - **MCP server tools** — Agents can query Linear and GitHub APIs directly via MCP.
-- **Built-in TDD** — `.claude/CLAUDE.md` enforces test-driven development for all contributions.
+- **Built-in TDD** — Project configuration enforces test-driven development for all contributions.
 
 ---
 
@@ -110,8 +110,8 @@ workspace:
 agent:
   maxConcurrentAgents: 5
   maxTurns: 20
-claude:
-  permissionMode: bypassPermissions
+opencode:
+  permission: bypassPermissions
 server:
   port: 4000
 ---
@@ -154,7 +154,7 @@ Orchestrator               Main state machine
   |-- OrchestratorState     running/claimed/completed/retry maps
   |-- WorkflowStore         Hot-reload WORKFLOW.md (mtime + hash)
   |-- Workspace             Isolated dirs + hooks + artifact cleanup
-  |-- AgentRunner           Claude SDK turn loop
+  |-- AgentRunner           OpenCode SDK turn loop
   |     |-- SessionLogger   Per-session Pino logs
   |     |-- RateLimiter     429 tracking
   |     |-- InputHandler    Auto-respond to input
@@ -181,7 +181,7 @@ Trackers
 
 ## Development
 
-Hatice follows **Test-Driven Development** by default. The TDD methodology is embedded in `.claude/CLAUDE.md` and enforced for all contributions.
+Hatice follows **Test-Driven Development** by default. The TDD methodology is embedded in project configuration and enforced for all contributions.
 
 ```bash
 # Run tests
@@ -234,15 +234,12 @@ All configuration lives in `WORKFLOW.md` YAML frontmatter:
 | | `maxTurns` | `20` | Max turns per agent session |
 | | `maxRetryBackoffMs` | `300000` | Max retry backoff (5 min) |
 | | `retryOnNormalExit` | `false` | Retry after successful completion |
-| `claude` | `model` | `null` | Claude model to use |
-| | `permissionMode` | `bypassPermissions` | SDK permission mode |
+| `opencode` | `model` | `null` | OpenCode model to use |
+| | `permission` | `bypassPermissions` | SDK permission mode |
 | | `turnTimeoutMs` | `3600000` | Per-turn timeout (1 hour) |
 | | `stallTimeoutMs` | `300000` | Stall detection timeout (5 min) |
-| | `allowedTools` | `null` | Whitelist specific tools |
-| | `disallowedTools` | `null` | Blacklist specific tools |
-| | `canUseTool` | `null` | Per-tool boolean map |
 | | `autoRespondToInput` | `true` | Auto-respond to agent input requests |
-| | `claudeCodePath` | `null` | Custom Claude Code binary path |
+| | `dryRun` | `false` | Dry run mode |
 | `server` | `port` | `null` | HTTP server port |
 | | `host` | `127.0.0.1` | HTTP server host |
 
@@ -319,9 +316,9 @@ orchestrator.start();
 
 This project was inspired by the **Harness Engineering** philosophy articulated by [Ryan Lopopolo at OpenAI](https://openai.com/index/harness-engineering/) and the architectural patterns demonstrated in [Symphony](https://github.com/openai/symphony) (Elixir/OTP).
 
-We believe in the agent-first future. Hatice is our contribution to making it real with Claude Code.
+We believe in the agent-first future. Hatice is our contribution to making it real with OpenCode.
 
-**No code was copied from Symphony.** We studied the architecture, adopted the manifesto, and rebuilt every component from scratch in TypeScript with the Claude Code Agent SDK. This is an independent implementation — a gift to the community.
+**No code was copied from Symphony.** We studied the architecture, adopted the manifesto, and rebuilt every component from scratch in TypeScript with the OpenCode SDK. This is an independent implementation — a gift to the community.
 
 ---
 
@@ -331,4 +328,4 @@ MIT
 
 ---
 
-*Built with Claude Code Agent SDK. Every line of code in this repository was written by AI agents, guided by humans.*
+*Built with OpenCode SDK. Every line of code in this repository was written by AI agents, guided by humans.*

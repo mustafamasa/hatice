@@ -1,24 +1,24 @@
 ---
 tracker:
   kind: gitlab
-  endpoint: "https://gitlab.example.com"
+  endpoint: "https://gitlab.example.com/"
   apiKey: $GITLAB_TOKEN
   projectSlug: "your-group/your-project"
   activeStates: ["Open"]
   terminalStates: ["Closed"]
-  assignee: "your-username"
+  assignee: "me"
 workspace:
   rootDir: /tmp/hatice-workspaces
 hooks:
-  afterCreate: "git clone https://gitlab.example.com/your-group/your-project.git . && npm install"
+  afterCreate: "git clone https://gitlab-ci-token:$GITLAB_TOKEN@gitlab.example.com/your-group/your-project.git . && npm install"
+  afterRun: "git add -A && git diff --cached --quiet || git commit -m 'fix: automated agent changes' && git push origin HEAD"
 polling:
   intervalMs: 30000
 agent:
   maxConcurrentAgents: 3
   maxTurns: 0
-claude:
-  permissionMode: bypassPermissions
-  model: claude-sonnet-4-20250514
+opencode:
+  permission: "allow"
 server:
   port: 4000
 ---
@@ -31,8 +31,13 @@ Solve the following GitLab issue:
 {{ issue.description }}
 
 ## Instructions
-- Work in the provided workspace directory
-- Write tests first (TDD), then implement
-- Follow existing code patterns and conventions
-- Run tests to verify your changes pass
-- Commit your changes when done with a descriptive message
+* Work in the provided workspace directory
+* Follow existing code patterns and conventions
+* Create a new branch from the issue identifier before making changes:
+  ```
+  git checkout -b fix/{{ issue.identifier | replace: "#", "-" | replace: "/", "-" }}
+  ```
+* When done, commit all changes with a descriptive message and push the branch:
+  ```
+  git add -A && git commit -m "fix: descriptive message" && git push origin HEAD
+  ```

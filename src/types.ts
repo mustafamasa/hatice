@@ -77,7 +77,7 @@ export interface haticeConfig {
   workspace: WorkspaceConfig;
   hooks: HooksConfig;
   agent: AgentConfig;
-  claude: ClaudeConfig;
+  opencode: OpencodeConfig;
   server: ServerConfig;
 }
 
@@ -115,16 +115,13 @@ export interface AgentConfig {
   retryOnNormalExit: boolean;
 }
 
-export interface ClaudeConfig {
-  model: string | null;
-  permissionMode: string;
+export interface OpencodeConfig {
+  hostname: string;
+  port: number;
+  model: { providerID: string; modelID: string } | null;
+  permission: string | Record<string, string> | null;
   turnTimeoutMs: number;
   stallTimeoutMs: number;
-  allowedTools: string[] | null;
-  disallowedTools: string[] | null;
-  systemPrompt: string | null;
-  canUseTool: Record<string, boolean> | null;
-  claudeCodePath: string | null;
   autoRespondToInput: boolean;
   dryRun: boolean;
 }

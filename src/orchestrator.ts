@@ -228,7 +228,7 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
         promptTemplate: workflow.promptTemplate,
         attempt,
         maxTurns: this.config.agent.maxTurns,
-        claudeConfig: this.config.claude,
+        opencodeConfig: this.config.opencode,
         trackerConfig: this.config.tracker,
         abortController,
         onEvent: (id, name, detail) => {
@@ -288,7 +288,7 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
       const entry = this.state.running.get(issueId);
       if (!entry) return;
       const elapsed = Date.now() - entry.lastActivityAt.getTime();
-      if (elapsed > this.config.claude.stallTimeoutMs) {
+      if (elapsed > this.config.opencode.stallTimeoutMs) {
         this.log.warn({ issueId, elapsed }, 'Agent stalled, aborting');
         abortController.abort();
       }
@@ -329,7 +329,7 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
           try {
             const usage = result.usage;
             const comment = [
-              `**hatice** completed this issue.`,
+              `**Hitit AI** completed this issue.`,
               `- Turns: ${result.turnsCompleted}`,
               `- Duration: ${((result.durationMs ?? 0) / 1000).toFixed(1)}s`,
               ...(usage ? [
@@ -337,14 +337,14 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
                 `- Cost: $${usage.costUsd.toFixed(4)}`,
               ] : []),
             ].join('\n');
-            await this.tracker.createComment(issueId, comment);
+            await this.tracker.createComment(entry.identifier, comment);
             this.log.info({ issueId }, 'Posted completion comment to tracker');
           } catch (e) {
             this.log.warn({ err: e, issueId }, 'Failed to post completion comment');
           }
 
           try {
-            await this.tracker.updateIssueState(issueId, 'Done');
+            await this.tracker.updateIssueState(entry.identifier, 'Done');
             this.log.info({ issueId }, 'Updated issue state to Done');
           } catch (e) {
             this.log.warn({ err: e, issueId }, 'Failed to update issue state to Done');
@@ -400,10 +400,12 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
   }
 
   async handleRetryFired(issueId: string): Promise<void> {
+    const retryState = this.state.getRetry(issueId);
+    const identifier = retryState?.identifier ?? issueId;
     this.state.cancelRetry(issueId);
 
     try {
-      const [issue] = await this.tracker.fetchIssueStatesByIds([issueId]);
+      const [issue] = await this.tracker.fetchIssueStatesByIds([identifier]);
       if (!issue) {
         this.log.warn({ issueId }, 'Issue not found on retry, releasing');
         this.state.unclaim(issueId);
@@ -450,9 +452,11 @@ export class Orchestrator extends EventEmitter<haticeEvents> {
   private async reconcileRunning(): Promise<void> {
     if (this.state.running.size === 0) return;
 
-    const runningIds = Array.from(this.state.running.keys());
+    // Use identifiers (e.g. "group/project#1") instead of raw IDs for GitLab compatibility
+    const entries = Array.from(this.state.running.values());
+    const identifiers = entries.map(e => e.identifier);
     try {
-      const freshIssues = await this.tracker.fetchIssueStatesByIds(runningIds);
+      const freshIssues = await this.tracker.fetchIssueStatesByIds(identifiers);
       const freshMap = new Map(freshIssues.map(i => [i.id, i]));
 
       const terminalStates = new Set(

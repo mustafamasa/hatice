@@ -29,7 +29,6 @@ export { RateLimitTracker } from './rate-limiter.js';
 export type { RateLimitInfo } from './rate-limiter.js';
 export { InputHandler } from './input-handler.js';
 export { TurnTimeout, TimeoutError } from './turn-timeout.js';
-export { createSpawnFunction } from './agent-spawn.js';
 export { expandHome, expandConfigPaths } from './path-utils.js';
 export { StartupCleanup } from './cleanup.js';
 export type { CleanupOptions, CleanupResult } from './cleanup.js';
@@ -53,7 +52,7 @@ export type {
   Issue, BlockerRef, RunningEntry, RetryState,
   TokenUsage, AggregateTotals, WorkerResult,
   haticeConfig, TrackerConfig, PollingConfig, WorkspaceConfig,
-  HooksConfig, AgentConfig, ClaudeConfig, ServerConfig,
+  HooksConfig, AgentConfig, OpencodeConfig, ServerConfig,
   Tracker, Workflow, OrchestratorSnapshot, SnapshotRunningEntry, SnapshotRetryEntry,
   haticeEvents,
 } from './types.js';

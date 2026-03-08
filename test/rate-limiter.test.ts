@@ -21,7 +21,7 @@ describe('RateLimitTracker', () => {
 
     it('returns false initially for any source', () => {
       expect(tracker.isLimited('github')).toBe(false);
-      expect(tracker.isLimited('claude')).toBe(false);
+      expect(tracker.isLimited('opencode')).toBe(false);
     });
   });
 
@@ -163,13 +163,13 @@ describe('RateLimitTracker', () => {
     it('returns all tracked sources', () => {
       tracker.recordLimit('linear', 5000);
       tracker.recordLimit('github', 3000);
-      tracker.recordLimit('claude', 10_000);
+      tracker.recordLimit('opencode', 10_000);
 
       const limits = tracker.getAllLimits();
       expect(limits).toHaveLength(3);
 
       const sources = limits.map((l) => l.source).sort();
-      expect(sources).toEqual(['claude', 'github', 'linear']);
+      expect(sources).toEqual(['github', 'linear', 'opencode']);
     });
 
     it('includes sources that were limited then succeeded', () => {

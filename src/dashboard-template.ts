@@ -2,7 +2,7 @@ import type { OrchestratorSnapshot, SnapshotRunningEntry, SnapshotRetryEntry } f
 
 /**
  * Renders a rich, SSE-powered HTML dashboard for hatice.
- * Inspired by Claude/Anthropic's warm, editorial design language.
+ * Warm, editorial design language.
  * Tailwind CSS via CDN + custom design tokens.
  */
 export function renderLiveDashboard(snapshot: OrchestratorSnapshot): string {
@@ -296,7 +296,7 @@ tailwind.config = {
       <span class="mx-2 text-sand-300">&middot;</span>
       autonomous agent orchestrator
       <span class="mx-2 text-sand-300">&middot;</span>
-      powered by Claude Code Agent SDK
+      powered by OpenCode SDK
     </p>
   </footer>
 

@@ -6,8 +6,8 @@ workspace:
 agent:
   maxConcurrentAgents: 2
   maxTurns: 0
-claude:
-  permissionMode: bypassPermissions
+opencode:
+  dryRun: false
 server:
   port: 4000
 ---

@@ -29,7 +29,7 @@ const program = new Command();
 
 program
   .name('hatice')
-  .description('Autonomous issue orchestration system powered by Claude Code Agent SDK')
+  .description('Autonomous issue orchestration system powered by OpenCode SDK')
   .version('0.1.0');
 
 program
@@ -68,7 +68,7 @@ program
         break;
       case 'memory': {
         // Enable dry-run mode for memory tracker (demo mode — no real agents)
-        config.claude.dryRun = true;
+        config.opencode.dryRun = true;
         const demoIssues: Issue[] = [
           {
             id: 'demo-1', identifier: 'DEMO-1', title: 'Fix login button not responding',

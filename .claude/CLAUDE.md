@@ -2,9 +2,9 @@
 
 ## Overview
 
-Hatice is an autonomous coding agent orchestration system. It polls issue trackers (Linear, GitHub Issues), creates isolated workspaces, and dispatches Claude Code agents to solve issues. Full lifecycle: dispatch, multi-turn execution, retry, backoff, reconciliation, observability.
+Hatice is an autonomous coding agent orchestration system. It polls issue trackers (Linear, GitHub Issues), creates isolated workspaces, and dispatches OpenCode agents to solve issues. Full lifecycle: dispatch, multi-turn execution, retry, backoff, reconciliation, observability.
 
-**Stack:** TypeScript, Node.js 20+ / Bun, Hono, Claude Agent SDK, Zod v4, LiquidJS, Pino, Vitest
+**Stack:** TypeScript, Node.js 20+ / Bun, Hono, OpenCode SDK, Zod v4, LiquidJS, Pino, Vitest
 
 ## Development Methodology: TDD (Default)
 
@@ -110,7 +110,7 @@ test("createUser makes user retrievable", async () => {
 ### Mocking Guidelines
 
 Mock at **system boundaries** only:
-- External APIs (Linear, GitHub, Claude SDK)
+- External APIs (Linear, GitHub, OpenCode SDK)
 - File system (sometimes — prefer real temp dirs)
 - Time/randomness
 
@@ -181,7 +181,7 @@ npx tsx bin/hatice.ts start -w ./WORKFLOW.md
 src/
   orchestrator.ts      — Main state machine (tick loop, dispatch, reconciliation)
   orchestrator-state.ts — State container (running, claimed, completed, retry maps)
-  agent-runner.ts      — Claude Agent SDK integration (turn loop, session resume)
+  agent-runner.ts      — OpenCode SDK integration (turn loop, session resume)
   http-server.ts       — Hono HTTP server (API + SSE + HTML dashboard)
   event-bus.ts         — Typed PubSub with wildcard support
   supervisor.ts        — Process crash recovery (OTP-like)
@@ -199,7 +199,6 @@ src/
   turn-timeout.ts      — Per-turn AbortController timeout
   snapshot-timeout.ts  — Promise.race timeout wrapper
   cleanup.ts           — Stale workspace cleanup
-  agent-spawn.ts       — Configurable agent binary
   path-utils.ts        — Home dir expansion
   dashboard-template.ts — Rich SSE-powered HTML dashboard
   types.ts             — All type definitions
